@@ -65,6 +65,14 @@ main.dark .table thead {
   background-color: #21443a !important;
 }
 
+main.dark .hover\:bg-\[\#f6faf8\]:hover {
+  background-color: #1d3d35 !important;
+}
+
+main.dark .bg-white\/90 {
+  background-color: rgba(24, 52, 46, 0.9) !important;
+}
+
 main.dark .theme-toggle {
   color: #f3c48a !important;
   background-color: #21443a !important;
