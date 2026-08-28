@@ -47,21 +47,39 @@ function App() {
     event.preventDefault(); setStatus({ type: '', message: '' }); setIsLocating(true)
     try {
       const address = form.address.trim()
-      const params = new URLSearchParams({ q: address, format: 'jsonv2', addressdetails: '1', limit: '5' })
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`)
-      let results = response.ok ? await response.json() : []
-      let result = results[0]
+      const normalizedAddress = address
+        .replace(/\s*,\s*/g, ', ')
+        .replace(/([a-z])city\b/gi, '$1 city')
+        .replace(/\bsan\s*pedro\s*city\b/gi, 'San Pedro City')
+        .replace(/\s+/g, ' ')
+      const queryVariants = [...new Set([
+        address,
+        normalizedAddress,
+        normalizedAddress.replace(/\bblk\.?\s*\d+\s*lot\.?\s*\d+\s*,?\s*/i, ''),
+      ])]
+      let result
+
+      for (const query of queryVariants) {
+        const params = new URLSearchParams({ q: query, format: 'jsonv2', addressdetails: '1', limit: '5' })
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`)
+        const results = response.ok ? await response.json() : []
+        result = results[0]
+        if (result) break
+      }
 
       if (!result) {
-        const fallbackParams = new URLSearchParams({ q: address, limit: '5' })
-        const fallbackResponse = await fetch(`https://photon.komoot.io/api/?${fallbackParams}`)
-        const fallbackData = fallbackResponse.ok ? await fallbackResponse.json() : { features: [] }
-        const feature = fallbackData.features?.[0]
-        if (feature) {
-          result = {
-            lat: feature.geometry.coordinates[1],
-            lon: feature.geometry.coordinates[0],
-            display_name: [feature.properties.name, feature.properties.city, feature.properties.country].filter(Boolean).join(', '),
+        for (const query of queryVariants) {
+          const fallbackParams = new URLSearchParams({ q: query, limit: '5' })
+          const fallbackResponse = await fetch(`https://photon.komoot.io/api/?${fallbackParams}`)
+          const fallbackData = fallbackResponse.ok ? await fallbackResponse.json() : { features: [] }
+          const feature = fallbackData.features?.[0]
+          if (feature) {
+            result = {
+              lat: feature.geometry.coordinates[1],
+              lon: feature.geometry.coordinates[0],
+              display_name: [feature.properties.name, feature.properties.city, feature.properties.country].filter(Boolean).join(', '),
+            }
+            break
           }
         }
       }
