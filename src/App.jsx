@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Badge, Button, Card, Form, Spinner } from 'react-bootstrap'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { MapPin, Navigation, Plus, Search, Trash2, Users } from 'lucide-react'
+import { MapPin, Moon, Navigation, Plus, Search, Sun, Trash2, Users } from 'lucide-react'
 
 const defaultCenter = [14.5995, 120.9842]
 const fields = [
@@ -28,6 +28,7 @@ function MapViewport({ selectedStudent }) {
 }
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('student-location-theme') === 'dark')
   const [students, setStudents] = useState(() => {
     try { return JSON.parse(localStorage.getItem('student-location-records')) || [] } catch { return [] }
   })
@@ -36,6 +37,9 @@ function App() {
   const [isLocating, setIsLocating] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState(null)
 
+  useEffect(() => {
+    localStorage.setItem('student-location-theme', isDarkMode ? 'dark' : 'light')
+  }, [isDarkMode])
   useEffect(() => localStorage.setItem('student-location-records', JSON.stringify(students)), [students])
   function updateField(event) { setForm({ ...form, [event.target.name]: event.target.value }) }
 
@@ -58,10 +62,10 @@ function App() {
     if (selectedStudent?.id === id) setSelectedStudent(null)
   }
 
-  return <main className="min-h-screen bg-[#f4f7f6] bg-[radial-gradient(circle_at_90%_0%,rgba(212,107,66,0.11),transparent_25rem)]">
+  return <main className={`min-h-screen bg-[#f4f7f6] bg-[radial-gradient(circle_at_90%_0%,rgba(212,107,66,0.11),transparent_25rem)]${isDarkMode ? ' dark' : ''}`}>
     <header className="border-b border-[#dbe5e1] bg-white/90 backdrop-blur"><div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-4 sm:px-8">
       <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#166b5a] text-white shadow-[0_8px_18px_rgba(22,107,90,0.2)]"><Navigation size={20} /></div><div><p className="m-0 font-['Space_Grotesk'] text-lg font-bold tracking-tight text-[#173b35]">Campus Compass</p><p className="m-0 text-xs text-[#6a7d78]">Student location registry</p></div></div>
-      <Badge bg="light" className="border border-[#cfe1da] px-3 py-2 text-[#46655c] shadow-sm"><span className="mr-1 inline-block h-2 w-2 rounded-full bg-[#36a269] shadow-[0_0_0_3px_#dff2e8]" /> Live registry</Badge>
+      <div className="flex items-center gap-2"><Button variant="light" aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setIsDarkMode((current) => !current)} className="theme-toggle rounded-lg border border-[#dbe5e1] p-2 text-[#46655c] shadow-sm">{isDarkMode ? <Sun size={17} /> : <Moon size={17} />}</Button><Badge bg="light" className="border border-[#cfe1da] px-3 py-2 text-[#46655c] shadow-sm"><span className="mr-1 inline-block h-2 w-2 rounded-full bg-[#36a269] shadow-[0_0_0_3px_#dff2e8]" /> Live registry</Badge></div>
     </div></header>
     <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-8 lg:py-12">
       <section className="mb-9 flex flex-col justify-between gap-6 border-b border-[#dbe5e1] pb-8 md:flex-row md:items-end"><div className="max-w-2xl"><p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#d46b42]">Location intelligence</p><h1 className="m-0 font-['Space_Grotesk'] text-4xl font-bold leading-[1.05] tracking-tight text-[#173b35] sm:text-5xl">Know where your students are.</h1><p className="mt-4 text-base leading-7 text-[#637670]">Register student information, pinpoint their address, and keep your campus directory in one clear view.</p></div><div className="flex gap-8 md:pb-1"><div><p className="m-0 font-['Space_Grotesk'] text-3xl font-bold text-[#166b5a]">{students.length}</p><p className="m-0 text-xs font-semibold uppercase tracking-wider text-[#72837e]">Located</p></div><div><p className="m-0 font-['Space_Grotesk'] text-3xl font-bold text-[#d46b42]">24/7</p><p className="m-0 text-xs font-semibold uppercase tracking-wider text-[#72837e]">Access</p></div></div></section>

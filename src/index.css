@@ -13,3 +13,60 @@ body {
 #root {
   min-height: 100svh;
 }
+
+main.dark {
+  background-color: #10231f;
+  color: #e5f0ec;
+  background-image: radial-gradient(circle at 90% 0%, rgba(212, 107, 66, 0.16), transparent 25rem);
+}
+
+main.dark .bg-white,
+main.dark .bg-white\/90 {
+  background-color: #18342e !important;
+}
+
+main.dark [class*="text-[#173b35]"],
+main.dark [class*="text-[#3f5b54]"],
+main.dark [class*="text-[#46655c]"] {
+  color: #dcebe5 !important;
+}
+
+main.dark [class*="text-[#637670]"],
+main.dark [class*="text-[#72837e]"],
+main.dark [class*="text-[#5f746c]"],
+main.dark [class*="text-[#7b8d87]"] {
+  color: #9db3ab !important;
+}
+
+main.dark [class*="border-[#dbe5e1]"],
+main.dark [class*="border-[#e4ece9]"],
+main.dark [class*="border-[#e8efed]"] {
+  border-color: #2b4b42 !important;
+}
+
+main.dark .card,
+main.dark .table {
+  --bs-card-bg: #18342e;
+  --bs-table-bg: #18342e;
+  --bs-table-color: #dcebe5;
+}
+
+main.dark .form-control {
+  color: #e5f0ec;
+  background-color: #122a25 !important;
+  border-color: #2b4b42 !important;
+}
+
+main.dark .form-control::placeholder {
+  color: #78948a;
+}
+
+main.dark .table thead {
+  background-color: #21443a !important;
+}
+
+main.dark .theme-toggle {
+  color: #f3c48a !important;
+  background-color: #21443a !important;
+  border-color: #356054 !important;
+}
