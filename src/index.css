@@ -17,6 +17,12 @@ body {
   text-align: center;
 }
 
+.badge.bg-light {
+  color: #245b4e !important;
+  background-color: #eff8f4 !important;
+  border-color: #c9e2d8 !important;
+}
+
 #root {
   min-height: 100svh;
 }
