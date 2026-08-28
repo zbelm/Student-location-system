@@ -46,13 +46,28 @@ function App() {
   async function registerStudent(event) {
     event.preventDefault(); setStatus({ type: '', message: '' }); setIsLocating(true)
     try {
-      const params = new URLSearchParams({ q: form.address, format: 'jsonv2', limit: '1' })
+      const address = form.address.trim()
+      const params = new URLSearchParams({ q: address, format: 'jsonv2', addressdetails: '1', limit: '5' })
       const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`)
-      if (!response.ok) throw new Error('The map service is unavailable right now.')
-      const results = await response.json()
-      if (!results.length) throw new Error('We could not find that address. Try adding a city or country.')
-      const result = results[0]
-      const student = { ...form, id: crypto.randomUUID(), lat: Number(result.lat), lng: Number(result.lon), locationLabel: result.display_name }
+      let results = response.ok ? await response.json() : []
+      let result = results[0]
+
+      if (!result) {
+        const fallbackParams = new URLSearchParams({ q: address, limit: '5' })
+        const fallbackResponse = await fetch(`https://photon.komoot.io/api/?${fallbackParams}`)
+        const fallbackData = fallbackResponse.ok ? await fallbackResponse.json() : { features: [] }
+        const feature = fallbackData.features?.[0]
+        if (feature) {
+          result = {
+            lat: feature.geometry.coordinates[1],
+            lon: feature.geometry.coordinates[0],
+            display_name: [feature.properties.name, feature.properties.city, feature.properties.country].filter(Boolean).join(', '),
+          }
+        }
+      }
+
+      if (!result) throw new Error('We could not find that address. Try adding the city and country.')
+      const student = { ...form, address, id: crypto.randomUUID(), lat: Number(result.lat), lng: Number(result.lon), locationLabel: result.display_name }
       setStudents((current) => [student, ...current]); setSelectedStudent(student); setForm(emptyForm)
       setStatus({ type: 'success', message: `${student.firstname} ${student.lastname} has been registered.` })
     } catch (error) { setStatus({ type: 'danger', message: error.message }) } finally { setIsLocating(false) }
@@ -73,7 +88,7 @@ function App() {
       <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
         <Card className="border-0 shadow-[0_16px_45px_rgba(28,65,57,0.1)] lg:sticky lg:top-6 lg:self-start"><Card.Body className="p-5 sm:p-6"><div className="mb-5 flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e7f3ee] text-[#166b5a]"><Plus size={19} /></div><div><h2 className="m-0 font-['Space_Grotesk'] text-xl font-bold text-[#173b35]">Register a student</h2><p className="m-0 text-sm text-[#72837e]">All fields are required</p></div></div>
           <Form onSubmit={registerStudent}><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">{fields.map((field) => <Form.Group key={field.name}><Form.Label className="mb-1 text-sm font-semibold text-[#3f5b54]">{field.label}</Form.Label><Form.Control required type={field.type} name={field.name} value={form[field.name]} onChange={updateField} placeholder={field.placeholder} className="border-[#dbe5e1] bg-[#fbfdfc] py-2.5 shadow-none focus:border-[#166b5a] focus:ring-2 focus:ring-[#b8ddd1]" /></Form.Group>)}</div>
-            <Form.Group className="mt-3"><Form.Label className="mb-1 text-sm font-semibold text-[#3f5b54]">Address</Form.Label><Form.Control required as="textarea" rows={3} name="address" value={form.address} onChange={updateField} placeholder="Street, city, country" className="border-[#dbe5e1] bg-[#fbfdfc] py-2.5 shadow-none focus:border-[#166b5a] focus:ring-2 focus:ring-[#b8ddd1]" /></Form.Group>
+            <Form.Group className="mt-3"><Form.Label className="mb-1 text-sm font-semibold text-[#3f5b54]">Address</Form.Label><Form.Control required minLength={3} as="textarea" rows={3} name="address" value={form.address} onChange={updateField} placeholder="Street, city, country" className="border-[#dbe5e1] bg-[#fbfdfc] py-2.5 shadow-none focus:border-[#166b5a] focus:ring-2 focus:ring-[#b8ddd1]" /><Form.Text className="text-xs text-[#72837e]">Include the city and country for the best match.</Form.Text></Form.Group>
             <Button type="submit" disabled={isLocating} className="register-button mt-5 w-full gap-2 border-0 bg-[#166b5a] py-2.5 font-semibold hover:bg-[#105447]">{isLocating ? <><Spinner size="sm" /> Locating address...</> : <><Search size={17} /> Register and locate</>}</Button>
           </Form></Card.Body></Card>
         <Card className="overflow-hidden border-0 shadow-[0_16px_45px_rgba(28,65,57,0.1)]"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4ece9] bg-white px-5 py-4"><div><div className="flex items-center gap-2"><h2 className="m-0 font-['Space_Grotesk'] text-xl font-bold text-[#173b35]">Student map</h2><span className="rounded bg-[#f7eee9] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#b15c3e]">Live</span></div><p className="m-0 text-sm text-[#72837e]">Click a marker to view student details</p></div><div className="flex items-center gap-2 rounded-full bg-[#e7f3ee] px-3 py-1.5 text-sm font-semibold text-[#166b5a]"><MapPin size={15} /> {students.length} located</div></div><div className="relative h-[360px] sm:h-[440px]"><MapContainer center={defaultCenter} zoom={12} scrollWheelZoom className="h-full w-full"><TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" /><MapViewport selectedStudent={selectedStudent} />{students.map((student) => <Marker key={student.id} position={[student.lat, student.lng]} icon={markerIcon} eventHandlers={{ click: () => setSelectedStudent(student) }}><Popup><strong>{student.firstname} {student.lastname}</strong><br />{student.course}<br /><small>{student.address}</small></Popup></Marker>)}</MapContainer><div className="pointer-events-none absolute bottom-4 left-4 z-[400] flex items-center gap-2 rounded-lg border border-white/70 bg-white/90 px-3 py-2 text-xs font-semibold text-[#46655c] shadow-lg backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#d46b42] shadow-[0_0_0_3px_rgba(212,107,66,0.2)]" /> Registered student</div></div></Card>
