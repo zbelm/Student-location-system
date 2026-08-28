@@ -85,3 +85,9 @@ main.dark .theme-toggle {
   background-color: #21443a !important;
   border-color: #356054 !important;
 }
+
+main.dark .badge.bg-light {
+  color: #bde5d4 !important;
+  background-color: #21443a !important;
+  border-color: #356054 !important;
+}
