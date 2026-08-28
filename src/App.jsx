@@ -51,10 +51,12 @@ function App() {
         .replace(/\s*,\s*/g, ', ')
         .replace(/([a-z])city\b/gi, '$1 city')
         .replace(/\bsan\s*pedro\s*city\b/gi, 'San Pedro City')
+        .replace(/\brd\.?\b/gi, 'Road')
         .replace(/\s+/g, ' ')
       const queryVariants = [...new Set([
         address,
         normalizedAddress,
+        normalizedAddress.replace(/^#\s*\d+\s*/i, ''),
         normalizedAddress.replace(/\bblk\.?\s*\d+\s*lot\.?\s*\d+\s*,?\s*/i, ''),
       ])]
       let result
